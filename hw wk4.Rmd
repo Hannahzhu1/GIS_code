@@ -1,0 +1,62 @@
+---
+title: "hw wk4"
+author: "Hannahzhu"
+date: "2021/12/3"
+output: html_document
+---
+
+# Inequality task - week4
+## reproduce
+### package versions
+
+```{r first, eval=FALSE}
+# i have taken a snapshot with
+#renv::snapshot()
+#install the same packages
+#renv::restore()
+```
+### Read in data:
+
+Located within the Data folder:
+HDI data from:http://hdr.undp.org/en/indicators/68606#
+shapefile from: https://hub.arcgis.com/datasets/2b93b06dc0dc4e809d3c8db5cb96ba69_0/explore?location=-2.688200%2C0.000000%2C1.41
+
+## Load packages
+```{r}
+library(tidyverse)
+library(sf)
+library(here)
+library(janitor)
+library(countrycode)
+```
+
+```{r}
+HDI<-read_csv(here::here("prac_4 data","Gender Inequality Index (GII).csv"),
+              locale=locale(encoding="latin1"),
+              na="..", skip=5)
+World<-st_read(here::here("prac_4 data","World_Countries__Generalized_.shp"))
+```
+
+## Clumn names
+
+Select columns we want and change country name to country code, using the `countrycode` package
+
+We could also just join it without this on the country name column
+```{r}
+HIDcols<-HDI%>%
+  clean_names()%>%
+  select(country,x2019,x2010)%>%
+  mutate(difference=x2019-x2010)%>%
+  slice(1:189,)%>%
+  mutate(iso_code=countrycode(country,origin='country.name',destination='iso2c'))
+```
+
+## Join
+```{r}
+Join_HDI<-World%>%
+  clean_names()%>%
+  left_join(.,
+            HIDcols,
+            by=c("aff_iso"="iso_code"))
+```
+
